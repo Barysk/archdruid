@@ -215,7 +215,6 @@ if [[ $UID = 0 ]] ; then
 	exit 1
 fi
 
-
 printf "%s" "Druid will begin a ritual in "; sleep 0.2
 printf "%s" "5" ; sleep 0.2 ; printf "%s" "." ; sleep 0.2 ; printf "%s" "." ; sleep 0.2
 printf "%s" "4" ; sleep 0.2 ; printf "%s" "." ; sleep 0.2 ; printf "%s" "." ; sleep 0.2
@@ -224,6 +223,20 @@ printf "%s" "2" ; sleep 0.2 ; printf "%s" "." ; sleep 0.2 ; printf "%s" "." ; sl
 printf "%s" "1" ; sleep 0.6
 
 BASE_DIR=$(pwd)
+
+echo "Creating home directory tree"
+mkdir -p \
+	"$HOME"/Applications \
+	"$HOME"/Desktop \
+	"$HOME"/Documents \
+	"$HOME"/Downloads \
+	"$HOME"/Games \
+	"$HOME"/Music \
+	"$HOME"/Pictures \
+	"$HOME"/Projects \
+	"$HOME"/Public \
+	"$HOME"/Templates \
+	"$HOME"/Videos
 
 echo "Updating system"
 sudo pacman -Syu
