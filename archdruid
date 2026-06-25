@@ -225,6 +225,9 @@ printf "%s" "1" ; sleep 0.6
 
 BASE_DIR=$(pwd)
 
+echo "Updating system"
+sudo pacman -Syu
+
 case "$GPU_VENDOR" in
 	'intel')
 		GPU_DRIVERS=("${INTEL_PKGS[@]}")
