@@ -299,10 +299,10 @@ if [[ "$BASHPROFILE_PATH" != "" ]]; then
 	cp "$BASHPROFILE_PATH" "$HOME/.bash_profile"
 fi
 
-# enabling xwayland satellite
-systemctl --user enable --now xwayland-satellite
+echo "enabling xwayland-satellite"
+systemctl --user enable xwayland-satellite
 
-# enabling bluetooth service
+echo "enabling bluetooth.service"
 sudo systemctl enable --now bluetooth.service
 
 # update tldr
