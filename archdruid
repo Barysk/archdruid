@@ -1,0 +1,312 @@
+#!/usr/bin/env bash
+
+### INFO #######################################################################
+### Script assumes you are using zen kernel. If another, do proper changes at 
+###   Definitions
+### Requirements: multilib enabled, internet conection and git is present.
+### Feel free to modify script according to your needs.
+### Script written using STRUCTURED paradigm with no jumps.
+### Script uses autoconfig scripts provided in my other repos e.g. dot_hyprland.
+### Script is designed for a fresh install with little preconfiguration, examine
+###   before using in non-fresh environment due to possible overwriting.
+### Script doesn't installs AUR packages, but it clones them into
+###   ~/Downloads/AUR, it is your responsobility to check them and install them.
+###   (makepkg -sri) for install.
+### Script has been tested on ThinkPad T14 [amd] and ThinkPad X220 [intel]
+###################################################### 2025-06-25 ### barysk ###
+
+# Nvidia must be Turing arch or newer
+#   if not modify installed backages in NVIDIA_PKGS
+GPU_VENDOR='' # provide: 'intel' or 'amd' or 'nvidia'
+
+DOTFILES_URL='' # if you have your dotfiles hosted somewhere
+
+# If you have your configs, provide paths to it.
+CONF_PATH='' # content will be moved to ~/.config/
+FONTS_PATH='' # content will be moved to ~/.local/share/fonts/
+BASHRC_PATH='' # will be moved to ~/.bashrc
+BASHPROFILE_PATH='' # will be moved to ~/.bash_profile
+
+ADD_PACKAGES=( # add/remove needed
+	steam # steam
+	prismlauncher # minecraft launcher
+	lutris # Open Gaming Platform
+	libreoffice-fresh # libreoffice
+	libresprite # foss fork of aseprite
+	anki # a smart spaced repetition flashcard program
+	audacity # a program that lets you manipulate digital audio waveforms
+	krita # Edit and paint images
+	kdenlive # A non-linear video editor for Linux using the MLT video framework
+	obs-studio # Free, open source software for live streaming and recording
+	reaper # A complete digital audio production application for computers
+	carla # Audio Plugin Host
+	tailscale # A mesh VPN that makes it easy to connect your devies
+	texlive # latex
+	biber # latex: bibliography manager
+	texlive-luatex # latex: lua support
+	texlive-lang # latex: additional lang support
+	zed # A high-performance, multiplayer code editor
+)
+
+### DEFINITIONS ################################################################
+
+### AUR packages to clone ###
+AUR_PKGS=(
+	'https://aur.archlinux.org/tofi.git' # Tiny rofi / dmenu replacement for wlroots-based Wayland compositors.
+	'https://aur.archlinux.org/vesktop-bin.git' # Discord client
+	'https://aur.archlinux.org/brave-bin.git' # Web browser that blocks ads and trackers by default
+	'https://aur.archlinux.org/auto-cpufreq.git' # Automatic CPU speed and power optimizer
+	                                             # don't forget to ```sudo auto-cpufreq --install```
+	'https://aur.archlinux.org/xpadneo-dkms.git' # Advanced Linux Driver for Xbox One Wireless Gamepad
+	'https://aur.archlinux.org/localsend-bin.git' # An open source cross-platform alternative to AirDrop
+	'https://aur.archlinux.org/blockbench-bin.git' # A low-poly 3D model editor
+	'https://aur.archlinux.org/proton-ge-custom-bin.git' # A custom distribution of Valves Proton with various patches
+	'https://aur.archlinux.org/bluetuith.git' # TUI-based bluetooth manager
+	'https://aur.archlinux.org/pcsx2-latest-bin.git' # playstation2 emulator
+	'https://aur.archlinux.org/rpcs3-bin.git' # playstation3 emulator
+	'https://aur.archlinux.org/xnp2.git' # pc98 emulator
+)
+
+### GPU ###
+INTEL_PKGS=(
+	vulkan-intel
+	lib32-vulkan-intel
+	xf86-video-intel
+)
+
+AMD_PKGS=(
+	vulkan-radeon
+	lib32-vulkan-radeon
+	xf86-video-amdgpu
+)
+
+NVIDIA_PKGS=(
+	nvidia-open-dkms
+	nvidia-utils
+	lib32-nvidia-utils
+)
+
+BASE_PKGS=(
+	base
+	base-devel
+	linux-zen-headers
+	# linux-lts-headers
+)
+
+SESSION_PKGS=(
+	wayland
+	xorg-xwayland
+	xwayland-satellite
+	uwsm
+	hyprland
+	xdg-desktop-portal-gtk
+	xdg-desktop-portal-hyprland
+	wl-clipboard
+	hyprlock
+	hyprpolkitagent
+	grim
+	slurp
+	hyprsunset
+	hyprpicker
+	mako
+	swaybg
+	waybar
+	qt5-wayland
+	qt6-wayland
+	imv
+)
+
+TERMINAL_PKGS=(
+	bat
+	btop
+	dust
+	fastfetch
+	fzf
+	github-cli
+	htop
+	imagemagick
+	jp2a
+	kitty
+	man-db
+	neovim
+	ripgrep
+	tldr
+	tmux
+	tree
+	tree-sitter-cli
+	udisks2
+	arch-wiki-docs
+)
+
+BASIC_PKGS=(
+	lib32-mesa
+	networkmanager
+	bluez
+	bluez-utils
+	thermald
+	brightnessctl
+	network-manager-applet
+	playerctl
+	noto-fonts
+	noto-fonts-cjk
+	noto-fonts-emoji
+	noto-fonts-extra
+)
+
+DEVELOPMENT=(
+	clang
+	make
+	cmake
+	odin
+	raylib
+	docker
+	electron
+)
+
+APPLICATIONS=(
+	pavucontrol
+	pcmanfm
+	qbittorrent
+	mpv
+	telegram-desktop
+	zathura
+	zathura-pdf-mupdf
+)
+
+SOUND=(
+	wireplumber
+	qpwgraph
+	alsa-utils
+	pipewire
+	lib32-pipewire
+	pipewire-alsa
+	lib32-alsa-plugins
+	pipewire-jack
+	lib32-pipewire-jack
+	pipewire-pulse
+	gst-plugin-pipewire
+	timidity++
+	freepats-general-midi
+	sof-firmware
+)
+
+WINE=(
+	wine-staging
+	wine-mono
+)
+
+THEMING=(
+	gtk3
+	gtk4
+	breeze
+	breeze-gtk
+)
+
+BROWSERS=(
+	# qutebrowser
+	firefox
+	# chromium
+)
+
+### SCRIPT #####################################################################
+
+if [[ $UID = 0 ]] ; then
+	echo "A user without a sudo must run this script"
+	exit 1
+fi
+
+
+printf "%s" "Druid will begin a ritual in "; sleep 0.2
+printf "%s" "5" ; sleep 0.2 ; printf "%s" "." ; sleep 0.2 ; printf "%s" "." ; sleep 0.2
+printf "%s" "4" ; sleep 0.2 ; printf "%s" "." ; sleep 0.2 ; printf "%s" "." ; sleep 0.2
+printf "%s" "3" ; sleep 0.2 ; printf "%s" "." ; sleep 0.2 ; printf "%s" "." ; sleep 0.2
+printf "%s" "2" ; sleep 0.2 ; printf "%s" "." ; sleep 0.2 ; printf "%s" "." ; sleep 0.2
+printf "%s" "1" ; sleep 0.6
+
+BASE_DIR=$(pwd)
+
+case "$GPU_VENDOR" in
+	'intel')
+		GPU_DRIVERS=("${INTEL_PKGS[@]}")
+		;;
+	'amd')
+		GPU_DRIVERS=("${AMD_PKGS[@]}")
+		;;
+	'nvidia')
+		GPU_DRIVERS=("${NVIDIA_PKGS[@]}")
+		;;
+	'')
+		echo "Err :: Forgot to provide GPU vendor?"
+		exit 2
+		;;
+	*)
+		echo "Err :: Wrong GPU vendor."
+		exit 3
+		;;
+esac
+
+echo "Installing defined packages"
+
+sudo pacman -S --needed \
+	"${BASE_PKGS[@]}" \
+	"${GPU_DRIVERS[@]}" \
+	"${SESSION_PKGS[@]}" \
+	"${TERMINAL_PKGS[@]}" \
+	"${BASIC_PKGS[@]}" \
+	"${DEVELOPMENT[@]}" \
+	"${APPLICATIONS[@]}" \
+	"${SOUND[@]}" \
+	"${WINE[@]}" \
+	"${THEMING[@]}" \
+	"${BROWSERS[@]}" \
+	"${ADD_PACKAGES[@]}"
+
+echo "Downloading AUR packages to ~/Download/AUR"
+mkdir -p "$HOME/Downloads/AUR"
+cd "$HOME/Downloads/AUR"
+for aur_pkg_url in "${AUR_PKGS[@]}"; do
+	git clone "$aur_pkg_url"
+done
+cd "$BASE_DIR"
+
+if [[ "$DOTFILES_URL" != "" ]]; then
+	echo "clonning dotfiles"
+	git clone "$DOTFILES_URL"
+fi
+
+if [[ "$CONF_PATH" != "" ]]; then
+	echo "copying dotfiles"
+	mkdir -p "$HOME/.config"
+	cp -r "$CONF_PATH"/. "$HOME/.config/."
+fi
+
+if [[ "$FONTS_PATH" != "" ]]; then
+	echo "copying fonts"
+	mkdir -p "$HOME/.local/share/fonts"
+	cp -r "$FONTS_PATH"/. "$HOME/.local/share/fonts/."
+fi
+
+if [[ "$BASHRC_PATH" != "" ]]; then
+	echo "copying bashrc"
+	cp "$BASHRC_PATH" "$HOME/.bashrc"
+fi
+
+if [[ "$BASHPROFILE_PATH" != "" ]]; then
+	echo "copying bash_profile"
+	cp "$BASHPROFILE_PATH" "$HOME/.bash_profile"
+fi
+
+# enabling xwayland satellite
+systemctl --user enable --now xwayland-satellite
+
+# enabling bluetooth service
+sudo systemctl enable --now bluetooth.service
+
+# update tldr
+tldr --update
+
+echo "Druid completed the ritual, now wellbeing is in thine hands."
+echo 'Notes:'
+echo 'You probably want to disable bluetooth autostart in /etc/bluetooth/main.conf'
+echo "Reboot is advised"
+
