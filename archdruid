@@ -3,6 +3,7 @@
 ### INFO #######################################################################
 ### Script assumes you are using zen kernel. If another, do proper changes at 
 ###   Definitions
+### Script designed around mine hyprland usecase. Modify it to get other DE
 ### Requirements: multilib enabled, internet conection and git is present.
 ### Feel free to modify script according to your needs.
 ### Script written using STRUCTURED paradigm with no jumps.
@@ -16,12 +17,11 @@
 ###################################################### 2025-06-25 ### barysk ###
 
 # Nvidia must be Turing arch or newer
-#   if not modify installed backages in NVIDIA_PKGS
+#   if not: modify installed backages in NVIDIA_PKGS
 GPU_VENDOR='' # provide: 'intel' or 'amd' or 'nvidia'
 
+# If you have your configs, provide paths to it. If not leave empty.
 DOTFILES_URL='' # if you have your dotfiles hosted somewhere
-
-# If you have your configs, provide paths to it.
 CONF_PATH='' # content will be moved to ~/.config/
 FONTS_PATH='' # content will be moved to ~/.local/share/fonts/
 BASHRC_PATH='' # will be moved to ~/.bashrc
